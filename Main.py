@@ -8,26 +8,44 @@ import re
 import os
 
 
+# Creazione file csv se non esiste
+if not os.path.isfile('yacht.csv'):
+    with open('yacht.csv', 'w', encoding='utf-8') as f:
+        f.write('link, titolo, descrizione, prezzo, paese, anno, lunghezza, fuel type, hull material, model\n')
+
+def remove_non_breaking_spaces(text):
+    text.replace('\u00A0', ' ')
+    cleaned_text = re.sub(r'\s+', ' ', text)
+    return cleaned_text.strip()
+
+
 def salvataggio(caratteristiche):
-    # salvataggio caratteristiche in un file csv
-    # creazione file csv se non esiste
-    if not os.path.isfile('yacht.csv'):
-        with open('yacht.csv', 'w') as f:
-            f.write('link, titolo, descrizione, prezzo, paese, anno, lunghezza, fuel type, hull material, model\n')
-    # salvataggio caratteristiche nel file csv
-    with open('yacht.csv', 'a') as f:
-        # salva le caratteristiche sono se non sono già presenti nel file quelle con lo stesso link
-        if not caratteristiche[0] in f.read(): 
-            f.write(caratteristiche[0] + ',' + caratteristiche[1] + ',' + caratteristiche[2] + ',' + caratteristiche[3] + ',' + caratteristiche[4] + ',' + caratteristiche[5] + ',' + caratteristiche[6] + ',' + caratteristiche[7] + ',' + caratteristiche[8] + ',' + caratteristiche[9] + '\n')
+    # Salvataggio caratteristiche in un file csv
+    
+    # Check if the characteristics are already present in the file
+    characteristics_line = ' ,/[..]/, '.join(caratteristiche)
+    characteristics_line += '\n'
+    
+    already_present = False
+    with open('yacht.csv', 'r', encoding='utf-8') as f:
+        for line in f:
+            if line == characteristics_line:
+                already_present = True
+                break
+    
+    # Append the characteristics to the file if not already present
+    if not already_present:
+        with open('yacht.csv', 'a', encoding='utf-8') as f:
+            f.write(characteristics_line)
     
     return 0
 
 def scraping(link):
     # creazione lista caratteristiche [link, titolo, descrizione, prezzo, paese, anno, lunghezza, fuel type, hull material, model]
-    # esempio link: https://www.yachtworld.com/yacht/2023-azimut-50-fly-8990909/
+    link = 'https://www.yachtworld.com' + link
     page = requests.get(link)
     soup = bs(page.content, 'html.parser')
-    caratteristiche = []
+    caratteristiche, lista = [], []
     caratteristiche.append(link)
     caratteristiche.append(soup.find('h1', class_='heading').text)
     caratteristiche.append(soup.find('div', class_='description').text)
@@ -47,10 +65,17 @@ def scraping(link):
         title = data_point.find("td", class_="datatable-title").text
         value = data_point.find("td", class_="datatable-value").text
         scraped_data[title] = value
+    
     for key, value in scraped_data.items():
-        caratteristiche.append(value)
+        cleaned_value = remove_non_breaking_spaces(value)
+        caratteristiche.append(cleaned_value.encode('utf-8').decode('utf-8'))
+        
     print(caratteristiche)
-    salvataggio(caratteristiche)
+    for cara in caratteristiche:
+        cara = remove_non_breaking_spaces(cara)
+        lista.append(cara.encode('utf-8').decode('utf-8'))  # Convert to utf-8
+
+    salvataggio(lista)
     return 0
 
 def ricerca():
@@ -67,10 +92,24 @@ def ricerca():
             for i in lista:
                 if i['href'].startswith('/yacht/'):
                     print(i['href'])
-                    scraping(i['href'])
+                    already_present = False
+                    with open('yacht.csv', 'r', encoding='utf-8') as f:  # Change encoding to 'utf-8'
+                        for line in f:
+                            line = line.split(',')
+                            # print(f'lineee : {line[0]}')
+                            links = 'https://www.yachtworld.com'+i['href']
+                            # print(f'links  : {links}')
+                            if line[0] == links:
+                                already_present = True
+                                print('already present-------------------------------------------------')
+                                break
+                    
+                    if not already_present:
+                        scraping(i['href'])
 
         x += 1
     return 0
+
 
 def main():
     ricerca()
