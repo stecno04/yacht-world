@@ -19,7 +19,13 @@ def ricerca():
 
 def main():
     ricerca()
-    input("desideri aggiungere un link alla lista preferiti? (y/n)")
-    if input == "y":
-        link = input("inserisci il link: ")
-        scraping(link)
+    while True:
+        k = input("desideri aggiungere un link alla lista preferiti? (y/n) ")
+        if k == "y":
+            link = input("inserisci il link: ")
+            scraping(link)
+        else:
+            print("ok")
+            break
+
+main()
