@@ -12,9 +12,26 @@ def salvataggio(caratteristiche):
     return 0
 
 def scraping(link):
+    
     return 0
 
 def ricerca():
+    x = 1
+    while True:
+        link = f'https://www.yachtworld.com/boats-for-sale/page-{x}/'
+        print(link)
+        r = requests.get(link)
+        soup = bs(r.text, 'html.parser')
+        lista = soup.find_all('a', href=True)
+        if len(lista) == 0:
+            break
+        else:
+            for i in lista:
+                if i['href'].startswith('/yacht/'):
+                    print(i['href'])
+                    scraping(i['href'])
+
+        x += 1
     return 0
 
 def main():
