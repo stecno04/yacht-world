@@ -11,7 +11,7 @@ import os
 # Creazione file csv se non esiste
 if not os.path.isfile('yacht.csv'):
     with open('yacht.csv', 'w', encoding='utf-8') as f:
-        f.write('link, titolo, descrizione, prezzo, paese, anno, lunghezza, fuel type, hull material, model\n')
+        f.write('link, titolo, descrizione, prezzo, anno, fatta da chi, modello, classe, lunghezza, fuel type, hull material, hull shape, hull warrenty, paese\n')
 
 def remove_non_breaking_spaces(text):
     text.replace('\u00A0', ' ')
@@ -31,6 +31,7 @@ def salvataggio(caratteristiche):
         for line in f:
             if line == characteristics_line:
                 already_present = True
+                print('already present 222222222222222222222222222222222222222222222')
                 break
     
     # Append the characteristics to the file if not already present
@@ -43,13 +44,15 @@ def salvataggio(caratteristiche):
 def scraping(link):
     # creazione lista caratteristiche [link, titolo, descrizione, prezzo, paese, anno, lunghezza, fuel type, hull material, model]
     link = 'https://www.yachtworld.com' + link
+
     page = requests.get(link)
     soup = bs(page.content, 'html.parser')
     caratteristiche, lista = [], []
     caratteristiche.append(link)
-    caratteristiche.append(soup.find('h1', class_='heading').text)
-    caratteristiche.append(soup.find('div', class_='description').text)
-    caratteristiche.append(soup.find('span', class_='payment-total').text)
+    caratteristiche.append(f"titolo: {soup.find('h1', class_='heading').text}")
+    caratteristiche.append(f"descrizione: {soup.find('div', class_='description').text}")
+    caratteristiche.append(f"cash: {soup.find('span', class_='payment-total').text}")
+    caratteristiche.append(f"location: {soup.find('span', class_='location').text}")
     
     details_container = soup.find("div", class_="collapse-content-details open")
 
@@ -68,7 +71,7 @@ def scraping(link):
     
     for key, value in scraped_data.items():
         cleaned_value = remove_non_breaking_spaces(value)
-        caratteristiche.append(cleaned_value.encode('utf-8').decode('utf-8'))
+        caratteristiche.append(f'key:{key}, value: {cleaned_value}'.encode('utf-8').decode('utf-8'))
         
     print(caratteristiche)
     for cara in caratteristiche:
@@ -95,7 +98,7 @@ def ricerca():
                     already_present = False
                     with open('yacht.csv', 'r', encoding='utf-8') as f:  # Change encoding to 'utf-8'
                         for line in f:
-                            line = line.split(',')
+                            line = line.split(' ,/[..]/, ')
                             # print(f'lineee : {line[0]}')
                             links = 'https://www.yachtworld.com'+i['href']
                             # print(f'links  : {links}')
