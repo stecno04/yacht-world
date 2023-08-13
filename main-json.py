@@ -133,30 +133,48 @@ def scraping(link):
     return 0
 
 def ricerca():
-    x = 1
+    max = 100
+    min = 1
     while True:
-        link = f'https://www.yachtworld.com/boats-for-sale/page-{x}/'
-        print(link)
-        r = requests.get(link)
-        soup = bs(r.text, 'html.parser')
-        lista = soup.find_all('a', href=True)
-        if len(lista) == 0:
-            break
-        else:
-            for i in lista:
-                if i['href'].startswith('/yacht/'):
+        k = 0
+        x = 1
+        while True:
+            link = f'https://www.yachtworld.com/boats-for-sale/price-{min},{max}/page-{x}/'
+            print(link)
+            lista = []
+            lista_vecchia = lista
+            r = requests.get(link)
+            soup = bs(r.text, 'html.parser')
+            lista = soup.find_all('a', href=True)
+            lista = [i for i in lista if i['href'].startswith('/yacht/')]
+            if lista == lista_vecchia:
+                break
+            if len(lista) == 0:
+                break
+            else:
+                for i in lista:
                     print(i['href'])
                     # check if the link is already present
-                    link = 'https://www.yachtworld.com' + i['href']
+                    link_art = 'https://www.yachtworld.com' + i['href']
                     with open('yacht.json', 'r', encoding='utf-8') as f:
                         existing_data = json.load(f)
                     existing_links = [entry['link'] for entry in existing_data]
-                    if link not in existing_links:
-                        scraping(link)
+                    if link_art not in existing_links:
+                        print(link)
+                        scraping(link_art)
+                        k = 0
                     else:
+                        k += 1
                         print('link già presenteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
-
-        x += 1
+                        
+                        print(k)
+                        if k > 500:
+                            for _ in range(50):
+                                print('link già presenteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
+                                x = 250
+            x += 1
+        min += 100
+        max += 100
     return 0
 
 def main():
