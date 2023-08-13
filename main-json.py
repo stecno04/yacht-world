@@ -36,36 +36,49 @@ def salvataggio(caratteristiche):
     return 0
 
 def scraping(link):
-
     page = requests.get(link)
     soup = bs(page.content, 'html.parser')
     caratteristiche = {}  # Change caratteristiche from a list to a dictionary
-    
+
     caratteristiche["link"] = link
     type_of_boat_element = soup.find('a', {'title': 'Power'}) or soup.find('a', {'title': 'Sail'})
     type_of_boat = type_of_boat_element.get_text() if type_of_boat_element else None
     caratteristiche["type m/s"] = type_of_boat
-    caratteristiche["titolo"] = soup.find('h1', class_='heading').text
-    caratteristiche["descrizione"] = soup.find('div', class_='description').text
-    caratteristiche["cash"] = soup.find('span', class_='payment-total').text
-    caratteristiche["location"] = soup.find('h2', class_='location').text
-    
+
+    # Check if the element was found before accessing attributes
+    titolo_element = soup.find('h1', class_='heading')
+    caratteristiche["titolo"] = titolo_element.text if titolo_element else None
+
+    descrizione_element = soup.find('div', class_='description')
+    caratteristiche["descrizione"] = descrizione_element.text if descrizione_element else None
+
+    cash_element = soup.find('span', class_='payment-total')
+    caratteristiche["cash"] = cash_element.text if cash_element else None
+
+    location_element = soup.find('h2', class_='location')
+    caratteristiche["location"] = location_element.text if location_element else None
+
     details_container = soup.find("div", class_="collapse-content-details open")
 
-    # Find the details table within the container
-    details_table = details_container.find("table", class_="datatable-section")
+    if details_container:
+        details_table = details_container.find("table", class_="datatable-section")
+        
+        if details_table:
+            data_points = details_table.find_all("tr", class_="datatable-item")
+        
+            # Loop through data points and extract key-value pairs
+            scraped_data = {}
+            for data_point in data_points:
+                title = data_point.find("td", class_="datatable-title").text
+                value = data_point.find("td", class_="datatable-value").text
+                scraped_data[title] = value
+            caratteristiche["scraped_data"] = scraped_data
+        else:
+            print("Details table not found.")
+    else:
+        print("Details container not found.")
 
-    # Extract individual data points
-    data_points = details_table.find_all("tr", class_="datatable-item")
-
-    # Loop through data points and extract key-value pairs
-    scraped_data = {}
-    for data_point in data_points:
-        title = data_point.find("td", class_="datatable-title").text
-        value = data_point.find("td", class_="datatable-value").text
-        scraped_data[title] = value
-    caratteristiche["scraped_data"] = scraped_data
-    
+        
     propulsion_container = soup.find("div", class_="detail-data-table propulsion")
     if propulsion_container:
         engine_categories = propulsion_container.find_all("div", class_="datatable-category")
