@@ -15,7 +15,7 @@ import sys
 if not os.path.isfile('yacht.json'):
     with open('yacht.json', 'w', encoding='utf-8') as f:
         f.write('[]')
-        
+
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))  # Retry 3 times with a 5-second delay between retries
 
 def salvataggio(caratteristiche):
@@ -144,20 +144,31 @@ def scraping(link):
     return 0
 
 def ricerca():
-    min = 139000
-    max = 140000
+    min = 143000
+    max = 144000
     while True:
         jk = 0
         k = 0
-        x = 1
-        while True:
+        link = f'https://www.yachtworld.com/boats-for-sale/price-{min},{max}/'
+        r = requests.get(link)
+        soup = bs(r.text, 'html.parser')
+        x = soup.find('div', class_='results-count')
+        print(x)
+        x, _ = x.text.split(' ')
+        print(x)
+        x = int(x)
+        x = (x // 15) + 2
+        print(x)
+        for x in range(1, x):
             try:
                 link = f'https://www.yachtworld.com/boats-for-sale/price-{min},{max}/page-{x}/'
+                r = requests.get(link)
+                soup = bs(r.text, 'html.parser')
+
                 print(link)
                 lista = []
                 lista_vecchia = lista
-                r = requests.get(link)
-                soup = bs(r.text, 'html.parser')
+                
                 lista = soup.find_all('a', href=True)
                 lista = [i for i in lista if i['href'].startswith('/yacht/')]
                 if lista == lista_vecchia:
@@ -199,7 +210,7 @@ def ricerca():
                 raise e  # Re-raise the exception to trigger the retry mechanism
 
             
-            x += 1
+            
         if max == 1550005000:
             sys.exit()
         min += 1000
