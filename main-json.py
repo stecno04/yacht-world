@@ -143,10 +143,12 @@ def scraping(link):
     
     return 0
 
-def ricerca():
-    min = 143000
-    max = 144000
-    while True:
+def ricerca(min, max):
+    diff = max - min
+    diff = diff / 1000
+    jj = 0
+    max = min + 1000
+    while jj <= diff:
         jk = 0
         k = 0
         link = f'https://www.yachtworld.com/boats-for-sale/price-{min},{max}/'
@@ -164,46 +166,24 @@ def ricerca():
                 link = f'https://www.yachtworld.com/boats-for-sale/price-{min},{max}/page-{x}/'
                 r = requests.get(link)
                 soup = bs(r.text, 'html.parser')
-
-                print(link)
-                lista = []
-                lista_vecchia = lista
-                
+                # find all <a class="inner" data-reporting-click-product-id="9007541" data-reporting-click-listing-type="standard listing" data-reporting-rank="1" data-reporting-page="1" href="/yacht/2020-sacs-sacs-strider-10-9007541/"><div class="image-container"><div class="dummy"></div><div class="image"><div class="banner-attribute NEW_ARRIVAL">Nuovo arrivo</div><div class="icons"></div><img alt="SACS Sacs STRIDER 10" class="image-results" height="222" loading="eager" fetchpriority="high" src="https://images.boatsgroup.com/resize/1/75/41/9007541_20230821040450392_1_XLARGE.jpg?w=300&amp;h=222&amp;t=1692615891000&amp;exact" width="300"></div></div><div class="description"><div class="top"><div class="name"><h2 class="">2020 SACS Sacs STRIDER 10</h2></div><div class="price">165.000 €*</div><div class="location">Dubrovnik, Croazia<div>990m<!-- --> - <!-- -->2020</div></div></div><div class="bottom"><div class="offered-by">Euromarine d.o.o.</div></div></div></a>
+                # where href starts with /yacht/
                 lista = soup.find_all('a', href=True)
                 lista = [i for i in lista if i['href'].startswith('/yacht/')]
-                if lista == lista_vecchia:
-                    break
-                if len(lista) == 0:
-                    break
-                else:
-                    len_lista = len(lista) 
-                    jk = 0
-                    for i in lista:
-                        print(i['href'])
-                        # check if the link is already present
-                        link_art = 'https://www.yachtworld.com' + i['href']
-                        with open('yacht.json', 'r', encoding='utf-8') as f:
-                            existing_data = json.load(f)
-                        existing_links = [entry['link'] for entry in existing_data]
-                        if link_art not in existing_links:
-                            print(link)
-                            scraping(link_art)
-                            jk = 0
-                            k = 0
-                        else:
-                            jk += 1
-                            if jk == len_lista:
-                                k += 15
-                                jk = 0
-                            print(f'len_lista = {len_lista},                     jk = {jk},                  k = {k}')
-                            print(f'')
-
-                            print('link già presenteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
-                            if k > 500:
-                                for _ in range(50):
-                                    print('presenteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
-                                x = 250
-                                jk = 0 
+                print(lista)
+                for i in lista:
+                    print(i['href'])
+                    # check if the link is already present
+                    link_art = 'https://www.yachtworld.com' + i['href']
+                    with open('yacht.json', 'r', encoding='utf-8') as f:
+                        existing_data = json.load(f)
+                    existing_links = [entry['link'] for entry in existing_data]
+                    if link_art not in existing_links:
+                        print(link)
+                        scraping(link_art)
+                    else:
+                        print(f'')
+                        print('link già presenteeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee')
 
             except requests.exceptions.RequestException as e:
                 print("Error:", e)
@@ -215,16 +195,28 @@ def ricerca():
             sys.exit()
         min += 1000
         max += 1000
+        jj = jj + 1
 
 def main():
-    ricerca()
     while True:
-        k = input("desideri aggiungere un link alla lista preferiti? (y/n) ")
-        if k == "y":
+        k = input("Would you like to update the dataset or add manually a single link? 1: update, 2: add single, 3: add multiples links, 0: exit ")
+        if k == "2":
             link = input("inserisci il link: ")
             scraping(link)
-        else:
-            print("ok")
+        elif k =="1":
+            min = int(input("inserisci prezzo minimo di ricerca "))
+            max = int(input("inserisci massimo prezzo di ricerca "))
+            ricerca(min, max)
+        elif k == "3":
+            link = input("inserisci link, 0 for exiting ")
+            while len(link) > 1:
+                scraping(link)
+                link = input("inserisci link, 0 for exiting ")
+        elif k == "0":
             break
+        else:
+            print("wrong input, retry")
+                
+
 
 main()
