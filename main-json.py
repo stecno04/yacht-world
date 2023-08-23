@@ -207,6 +207,7 @@ def main():
             min = int(input("inserisci prezzo minimo di ricerca "))
             max = int(input("inserisci massimo prezzo di ricerca "))
             ricerca(min, max)
+            print(" ricerca completata da ", min, " a ", max)
         elif k == "3":
             link = input("inserisci link, 0 for exiting ")
             while len(link) > 1:
