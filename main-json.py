@@ -8,8 +8,13 @@ import os
 import json
 from tenacity import retry, stop_after_attempt, wait_fixed
 import sys 
+import pymongo
 
-
+# Connect to the MongoDB database
+client = pymongo.MongoClient("/")
+db = client["/"]
+collection = db["/"]
+data = collection.find()
 
 # Creazione file csv se non esiste
 if not os.path.isfile('yacht.json'):
@@ -19,6 +24,10 @@ if not os.path.isfile('yacht.json'):
 @retry(stop=stop_after_attempt(3), wait=wait_fixed(5))  # Retry 3 times with a 5-second delay between retries
 
 def salvataggio(caratteristiche):
+    mongo_links = []
+    for i in data:
+        mongo_links.append(i['link'])
+
     # Load existing data
     existing_data = []
     if os.path.isfile('yacht.json'):
@@ -32,11 +41,22 @@ def salvataggio(caratteristiche):
     existing_links = [entry['link'] for entry in existing_data]
     if link not in existing_links:
         characteristics_dict['link'] = link
+        print(characteristics_dict)
         existing_data.append(characteristics_dict)
+        insert_result = collection.insert_one(characteristics_dict)
 
-    # Save the updated data
-    with open('yacht.json', 'w', encoding='utf-8') as f:
-        json.dump(existing_data, f, ensure_ascii=False, indent=4)
+        if insert_result.inserted_id:
+            print("Document inserted successfully. Inserted ID:", insert_result.inserted_id)
+        else:
+            print("Failed to insert document.")
+    else:
+        print(f'')
+        print('link già presente')
+
+
+    # # Save the updated data
+    # with open('yacht.json', 'w', encoding='utf-8') as f:
+    #     json.dump(existing_data, f, ensure_ascii=False, indent=4)
 
     return 0
 
